@@ -28,44 +28,48 @@ module.exports = class BrasileiraoModels {
 
     static async getTimeByNome(nome){
         try {
-            return await client.db().collection('brasileiraoA').findOne({nome:nome})
+            return await client.db('probabilityGreen').collection('brasileiraoA').findOne({nome:nome})
         } catch (error) {
             return error
         }
     }
 
     static async getGamesProximosJogosCampeonato(){
-        return await client.db().collection('proximosJogosBrasileiraoA').find().toArray()
+        return await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').find().toArray()
     }
 
     static async addGamesInProximosJogosCampeonato(casa,fora,data,horario){
         const proximoJogosBrasileiraoA = new ProximosJogosBrasileiraoA(casa,fora,data,horario)
-        await client.db().collection('proximosJogosBrasileiraoA').insertOne(proximoJogosBrasileiraoA)
+        await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').insertOne(proximoJogosBrasileiraoA)
     }
 
     static async removeGamesProximosJogosCampeonato(horarioGame, dataGame){
-        await client.db().collection('proximosJogosBrasileiraoA').deleteMany({hora:horarioGame, data:dataGame})
+        await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').deleteMany({hora:horarioGame, data:dataGame})
     }
 
     static async getTable(){
-        return await client.db().collection('brasileiraoA').find().toArray()
+        try {
+            return await client.db('probabilityGreen').collection('brasileiraoA').find().toArray()
+        } catch (error) {
+            console.log(error)
+        }
     }
     
     static async updateTable(time){
-        await client.db().collection('brasileiraoA').updateOne({nome:time.nome},{$set:{posicao:time.posicao}}).catch((err)=>{
+        await client.db('probabilityGreen').collection('brasileiraoA').updateOne({nome:time.nome},{$set:{posicao:time.posicao}}).catch((err)=>{
             console.log(err)
         })
     }
 
     static async changingStatistics(timeNome, updatedTime){
-        await client.db().collection('brasileiraoA').updateOne({nome:timeNome},{$set:updatedTime})
+        await client.db('probabilityGreen').collection('brasileiraoA').updateOne({nome:timeNome},{$set:updatedTime})
     }
 
     static async changingStatisticsProximosJogos (timeNome,proximosJogos){
-        await client.db().collection('brasileiraoA').updateOne({nome:timeNome},{$set:{proximosJogos:proximosJogos}})
+        await client.db('probabilityGreen').collection('brasileiraoA').updateOne({nome:timeNome},{$set:{proximosJogos:proximosJogos}})
     }
 
     async save(){
-        await client.db().collection('brasileiraoA').insertOne(this)
+        await client.db('probabilityGreen').collection('brasileiraoA').insertOne(this)
     }
 }
