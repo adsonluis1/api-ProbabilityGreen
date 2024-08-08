@@ -43,8 +43,8 @@ module.exports = class BrasileiraoModels {
         await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').insertOne(proximoJogosBrasileiraoA)
     }
 
-    static async removeGamesProximosJogosCampeonato(horarioGame, dataGame){
-        await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').deleteMany({hora:horarioGame, data:dataGame})
+    static async removeGamesProximosJogosCampeonato(horarioGame){
+        await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').deleteMany({hora:horarioGame})
     }
 
     static async getTable(){
