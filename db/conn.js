@@ -1,6 +1,7 @@
 const {MongoClient} = require('mongodb')
 require('dotenv').config()
 const {URI_DB} = process.env
+const localUrl = 'mongodb://localhost:27017'
 
 const client = new MongoClient(URI_DB)
 
