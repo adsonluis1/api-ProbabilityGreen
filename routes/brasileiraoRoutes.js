@@ -9,6 +9,7 @@ router.post('/addTime', brasileiraoA.addTime)
 router.post('/addProximosJogos', brasileiraoA.addGamesInProximosJogos)
 router.patch('/changingStatistics', brasileiraoA.changingTeamStatistics)
 router.patch('/changingProximosJogos', brasileiraoA.changingTeamStatisticsProximosJogos)
+router.patch('/setResultProximosJogos', brasileiraoA.setResultProximosJogos)
 router.delete('/deleteProximosJogos/:hora/:data', brasileiraoA.removeGamesProximosJogosCampeonatoByTime)
 
 module.exports = router
