@@ -70,7 +70,15 @@ module.exports = class brasileiraoA {
     static async getGamesByProximosJogosCampeonato(req,res){
         try {
             const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
-            const refProximosJogos = []
+            res.json(({message:'OK',proximosJogos}))    
+        } catch (error) {
+            res.json({message:error})   
+        }
+    }
+
+    static async setResultProximosJogos(req,res){
+        try {
+            const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
             proximosJogos.map( async (jogo)=>{
                 let timeCasa = jogo.casa
                 let timeFora = jogo.fora
@@ -85,20 +93,12 @@ module.exports = class brasileiraoA {
                     let golsCasa = Number(await page.evaluate(() =>  document.querySelector(".imso_mh__l-tm-sc")?.textContent))
                     let golsFora = Number(await page.evaluate(()=> document.querySelector('.imso_mh__r-tm-sc')?.textContent))
                     await browser.close()
-                    jogo["encerrado"]= encerrado
-                    jogo["golsCasa"] = golsCasa
-                    jogo["golsFora"] = golsFora
+                    await BrasileiraoModels.setResultProximosJogosCameponato(jogo._id,golsCasa,golsFora,encerrado)
                 }else{
                     await browser.close()
-                    jogo["encerrado"]= encerrado
-                    jogo["golsCasa"] = null
-                    jogo["golsFora"] = null
                 }
-                refProximosJogos.push(jogo)
-                if(refProximosJogos.length == proximosJogos.length){
-                    res.json({message:'OK',proximosJogos})
-                }
-            })    
+            })   
+            res.json({message:"OK"})   
         } catch (error) {
             res.json({message:error})   
         }
