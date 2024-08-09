@@ -9,6 +9,7 @@ function transformingHoursInNumbers(hours){
 
 function transformingNumbersInHours(number){
     return number.splice(2,0,":")
+    count
 }
 
 function transformingDataInNumber (data,element){
@@ -69,9 +70,37 @@ module.exports = class brasileiraoA {
     static async getGamesByProximosJogosCampeonato(req,res){
         try {
             const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
-            res.json({message:"OK",proximosJogos})
+            const refProximosJogos = []
+            proximosJogos.map( async (jogo)=>{
+                let timeCasa = jogo.casa
+                let timeFora = jogo.fora
+                timeCasa = timeCasa.replace(' ','+')
+                timeFora = timeFora.replace(' ','+')
+                const searchUrl = `https://www.google.com/search?client=opera-gx&q=${timeCasa}+x+${timeFora}&sourceid=opera&ie=UTF-8&oe=UTF-8`
+                const browser = await puppeteer.launch({headless:true,executablePath: chromium.path});
+                const page = await browser.newPage();
+                await page.goto(searchUrl);
+                const encerrado = await page.evaluate(() => document.querySelector(".imso_mh__ft-mtch.imso-medium-font.imso_mh__ft-mtchc")? true : false)
+                if(encerrado){
+                    let golsCasa = Number(await page.evaluate(() =>  document.querySelector(".imso_mh__l-tm-sc")?.textContent))
+                    let golsFora = Number(await page.evaluate(()=> document.querySelector('.imso_mh__r-tm-sc')?.textContent))
+                    await browser.close()
+                    jogo["encerrado"]= encerrado
+                    jogo["golsCasa"] = golsCasa
+                    jogo["golsFora"] = golsFora
+                }else{
+                    await browser.close()
+                    jogo["encerrado"]= encerrado
+                    jogo["golsCasa"] = null
+                    jogo["golsFora"] = null
+                }
+                refProximosJogos.push(jogo)
+                if(refProximosJogos.length == proximosJogos.length){
+                    res.json({message:'OK',proximosJogos})
+                }
+            })    
         } catch (error) {
-            res.json({message:error})
+            res.json({message:error})   
         }
     }
 
@@ -133,29 +162,6 @@ module.exports = class brasileiraoA {
             res.json({message:"OK",table:updatedtable})
         } catch (error) {
             res.status(400).json({message:error})
-        }
-    }
-    
-    static async checkingGameOver(req,res){
-        let {timeCasa,timeFora} = req.params
-        timeCasa = decodeURIComponent(timeCasa)
-        timeFora = decodeURIComponent(timeFora)
-        timeCasa = timeCasa.replace(' ','+')
-        timeFora = timeFora.replace(' ','+')
-        const searchUrl = `https://www.google.com/search?client=opera-gx&q=${timeCasa}+x+${timeFora}&sourceid=opera&ie=UTF-8&oe=UTF-8`
-        const browser = await puppeteer.launch({headless:true,executablePath: chromium.path});
-        const page = await browser.newPage();
-        await page.goto(searchUrl);
-        const encerrado = await page.evaluate(() => document.querySelector(".imso_mh__ft-mtch.imso-medium-font.imso_mh__ft-mtchc")? true : false)
-        if(encerrado){
-            console.count('')
-            let golsCasa = Number(await page.evaluate(() =>  document.querySelector(".imso_mh__l-tm-sc")?.textContent))
-            let golsFora = Number(await page.evaluate(()=> document.querySelector('.imso_mh__r-tm-sc')?.textContent))
-            await browser.close()
-            res.json({message:'OK',encerrado:true,result:{casa:golsCasa, fora:golsFora}})
-        }else{
-            await browser.close()
-            res.json({message:'OK', encerrado:false})
         }
     }
 
