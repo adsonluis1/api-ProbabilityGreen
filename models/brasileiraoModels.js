@@ -38,6 +38,10 @@ module.exports = class BrasileiraoModels {
         return await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').find().toArray()
     }
 
+    static async setResultProximosJogosCameponato(idJogo,golsCasa,golsFora,encerrado){
+        await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').updateOne({_id:idJogo},{$set:{encerrado:encerrado,golsCasa:golsCasa,golsFora:golsFora}})
+    }
+
     static async addGamesInProximosJogosCampeonato(casa,fora,data,horario){
         const proximoJogosBrasileiraoA = new ProximosJogosBrasileiraoA(casa,fora,data,horario)
         await client.db('probabilityGreen').collection('proximosJogosBrasileiraoA').insertOne(proximoJogosBrasileiraoA)
