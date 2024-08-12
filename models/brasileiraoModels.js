@@ -59,6 +59,10 @@ module.exports = class BrasileiraoModels {
         }
     }
     
+    static async changingPositionTable(timeNome,timePosicao){
+        await client.db('probabilityGreen').collection('brasileiraoA').updateOne({nome:timeNome},{$set:{posicao:timePosicao}})
+    }
+
     static async updateTable(time){
         await client.db('probabilityGreen').collection('brasileiraoA').updateOne({nome:time.nome},{$set:{posicao:time.posicao}}).catch((err)=>{
             console.log(err)
