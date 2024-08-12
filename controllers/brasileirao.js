@@ -1,6 +1,7 @@
 const BrasileiraoModels = require('../models/brasileiraoModels')
 const puppeteer = require('puppeteer-core')
 const chromium = require('chromium');
+const { checkVisibility } = require('puppeteer-core/internal/injected/util.js');
 
 function transformingHoursInNumbers(hours){
     hours = hours.toString()
@@ -72,7 +73,7 @@ module.exports = class brasileiraoA {
             const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
             res.json(({message:'OK',proximosJogos}))    
         } catch (error) {
-            res.json({message:error})   
+            res.status(400).json({message:error})   
         }
     }
 
@@ -100,8 +101,36 @@ module.exports = class brasileiraoA {
             })   
             res.json({message:"OK"})   
         } catch (error) {
-            res.json({message:error})   
+            res.status(400).json({message:error})   
         }
+    }
+
+    static async changingPositionTable(req, res){
+        try {
+            const times = await BrasileiraoModels.getTable()
+            let updatedtable = times.sort((a,b)=>{
+                if(b.pontos != a.pontos)
+                    return b.pontos - a.pontos
+                
+                else if(b.vitorias != a.vitorias)
+                    return b.vitorias - a.vitorias
+                // saldo de gols
+                else if(b.saldoGols != a.saldoGols)
+                    return b.saldoGols - a.saldoGols
+    
+                // mais gols pro
+                else if(b.golsMarcados != a.golsMarcados)
+                    return b.golsMarcados - a.golsMarcados
+            })
+            updatedtable.map(async (time,index)=>{
+                await BrasileiraoModels.changingPositionTable(time.nome,index+1)
+            })
+            
+            res.json({message:"OK"})
+        } catch (error) {
+            res.status(400).json({message:error})
+        }
+        
     }
 
     static async removeGamesProximosJogosCampeonatoByTime(req, res){
@@ -185,10 +214,10 @@ module.exports = class brasileiraoA {
             await browser.close()
         }else{
             await browser.close()
-            res.json({message:'OK'})
+            return
         }
-        proximosJogos['golsCasa'] = golsCasa
-        proximosJogos['golsFora'] = golsFora
+        jogo['golsCasa'] = golsCasa
+        jogo['golsFora'] = golsFora
         timeCasa = timeCasa.replace('+',' ')
         timeFora = timeFora.replace('+',' ')
     
@@ -248,7 +277,7 @@ module.exports = class brasileiraoA {
                 return
             }
         }
-    
+        console.log(jogoAnterior)
         jogoAnterior.adversario = timeFora
     
         if(jogoAnterior.casa != jogoAnterior.adversario){
