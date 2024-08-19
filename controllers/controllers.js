@@ -1,4 +1,4 @@
-const BrasileiraoModels = require('../models/brasileiraoModels')
+const BrasileiraoModels = require('../models/Models')
 const puppeteer = require('puppeteer-core')
 const chromium = require('chromium');
 const { checkVisibility } = require('puppeteer-core/internal/injected/util.js');
@@ -38,12 +38,13 @@ function makeArrayProximosJogos (proximosJogos, adversario){
     return proximosJogos
 }
 
-module.exports = class brasileiraoA {
+module.exports = class controllers {
     static async addTime(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
         const {nome,rank,vitorias,derrotas,empates,golsMarcados,golsSofridos,saldoGols,jogosAnteriores,proximosJogos,pontos,posicao,id} = req.body
         const newTime = new BrasileiraoModels(nome,rank,vitorias,derrotas,empates,golsMarcados,golsSofridos,saldoGols,jogosAnteriores,proximosJogos,pontos,posicao,id)
         try {
-            await newTime.save()
+            await newTime.save(urlCampeonato)
         } catch (error) {
             res.status(400).json({message:error})
             return
@@ -52,9 +53,10 @@ module.exports = class brasileiraoA {
     }
 
     static async getTimeByName(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
         let timeName = decodeURIComponent(req.params.time)
         timeName = timeName.replace(timeName.charAt(0),timeName.charAt(0).toUpperCase())
-        let time = await BrasileiraoModels.getTimeByNome(timeName)
+        let time = await BrasileiraoModels.getTimeByNome(urlCampeonato,timeName)
         if(time == null){
             res.status(404).json({messsage:'Team was not found'})
             return
@@ -63,14 +65,18 @@ module.exports = class brasileiraoA {
     }
 
     static async addGamesInProximosJogos(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
+        urlCampeonato = urlCampeonato.charAt(0).toUpperCase() + urlCampeonato.substring(1)
         const {casa,fora,data,horario} = req.body
-        await BrasileiraoModels.addGamesInProximosJogosCampeonato(casa,fora,data,horario)
+        await BrasileiraoModels.addGamesInProximosJogosCampeonato(urlCampeonato,casa,fora,data,horario)
         res.json({message:'OK'})
     }
 
     static async getGamesByProximosJogosCampeonato(req,res){
+        let urlCampeonato = req.baseUrl.replace('/','')
+        urlCampeonato = urlCampeonato.charAt(0).toUpperCase() + urlCampeonato.substring(1)
         try {
-            const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
+            const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato(urlCampeonato)
             res.json(({message:'OK',proximosJogos}))    
         } catch (error) {
             res.status(400).json({message:error})   
@@ -78,8 +84,10 @@ module.exports = class brasileiraoA {
     }
 
     static async setResultProximosJogos(req,res){
+        let urlCampeonato = req.baseUrl.replace('/','')
+        urlCampeonato = urlCampeonato.charAt(0).toUpperCase() + urlCampeonato.substring(1) 
         try {
-            const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
+            const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato(urlCampeonato)
             proximosJogos.map( async (jogo)=>{
                 let timeCasa = jogo.casa
                 let timeFora = jogo.fora
@@ -94,7 +102,7 @@ module.exports = class brasileiraoA {
                     let golsCasa = Number(await page.evaluate(() =>  document.querySelector(".imso_mh__l-tm-sc")?.textContent))
                     let golsFora = Number(await page.evaluate(()=> document.querySelector('.imso_mh__r-tm-sc')?.textContent))
                     await browser.close()
-                    await BrasileiraoModels.setResultProximosJogosCameponato(jogo._id,golsCasa,golsFora,encerrado)
+                    await BrasileiraoModels.setResultProximosJogosCameponato(urlCampeonato,jogo._id,golsCasa,golsFora,encerrado)
                 }else{
                     await browser.close()
                 }
@@ -106,8 +114,9 @@ module.exports = class brasileiraoA {
     }
 
     static async changingPositionTable(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
         try {
-            const times = await BrasileiraoModels.getTable()
+            const times = await BrasileiraoModels.getTable(urlCampeonato)
             let updatedtable = times.sort((a,b)=>{
                 if(b.pontos != a.pontos)
                     return b.pontos - a.pontos
@@ -123,7 +132,7 @@ module.exports = class brasileiraoA {
                     return b.golsMarcados - a.golsMarcados
             })
             updatedtable.map(async (time,index)=>{
-                await BrasileiraoModels.changingPositionTable(time.nome,index+1)
+                await BrasileiraoModels.changingPositionTable(urlCampeonato,time.nome,index+1)
             })
             
             res.json({message:"OK"})
@@ -134,14 +143,16 @@ module.exports = class brasileiraoA {
     }
 
     static async removeGamesProximosJogosCampeonatoByTime(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
+        urlCampeonato = urlCampeonato.charAt(0).toUpperCase() + urlCampeonato.substring(1) 
         let {hora,data} = req.params
-        const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
+        const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato(urlCampeonato)
         // so vai tirar o jogo do banco de dados um dia dps
         proximosJogos.map(async (jogo)=>{
             const dataAtual = transformingDataInNumber(data, ' ')
             let dataJogo = transformingDataInNumber(jogo.data, '/')
             if(dataAtual > dataJogo){
-                await BrasileiraoModels.removeGamesProximosJogosCampeonato(jogo.hora)
+                await BrasileiraoModels.removeGamesProximosJogosCampeonato(urlCampeonato,jogo.hora)
             }
         })
        
@@ -150,16 +161,17 @@ module.exports = class brasileiraoA {
     }
 
     static async changingTeamStatisticsProximosJogos(req, res){
+        let urlCampeonato = req.baseUrl.replace('/','')
         const {casa, fora} = req.body
-        const objTimeCasa = await BrasileiraoModels.getTimeByNome(casa)
-        const objTimeFora = await BrasileiraoModels.getTimeByNome(fora)
+        const objTimeCasa = await BrasileiraoModels.getTimeByNome(urlCampeonato,casa)
+        const objTimeFora = await BrasileiraoModels.getTimeByNome(urlCampeonatos,fora)
 
         const arrProximosJogosCasa = makeArrayProximosJogos(objTimeCasa.proximosJogos,fora)
         const arrProximosJogosFora = makeArrayProximosJogos(objTimeFora.proximosJogos,casa)
 
         try {
-            await BrasileiraoModels.changingStatisticsProximosJogos(casa,arrProximosJogosCasa)
-            await BrasileiraoModels.changingStatisticsProximosJogos(fora,arrProximosJogosFora)
+            await BrasileiraoModels.changingStatisticsProximosJogos(urlCampeonato,casa,arrProximosJogosCasa)
+            await BrasileiraoModels.changingStatisticsProximosJogos(urlCampeonato,fora,arrProximosJogosFora)
         } catch (error) {
             res.status(400).json({message:error})
             return
@@ -169,8 +181,9 @@ module.exports = class brasileiraoA {
     }
 
     static async getTable(req, res){
+        const urlCampeonato = req.baseUrl.replace('/','')
         try {
-            const table = await BrasileiraoModels.getTable()
+            const table = await BrasileiraoModels.getTable(urlCampeonato)
             let updatedtable = table.sort((a,b)=>{
                 if(b.pontos != a.pontos)
                     return b.pontos - a.pontos
@@ -195,8 +208,10 @@ module.exports = class brasileiraoA {
     }
 
     static async changingTeamStatistics(req, res){
-        let {urlCampeonato} = req.body
-        const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato()
+        let urlCampeonato = req.baseUrl.replace('/','')
+        urlCampeonato = urlCampeonato.charAt(0).toUpperCase() + urlCampeonato.substring(1)
+        const proximosJogos = await BrasileiraoModels.getGamesProximosJogosCampeonato(urlCampeonato)
+        urlCampeonato = urlCampeonato.charAt(0).toLowerCase() + urlCampeonato.substring(1)
         proximosJogos.map(async (jogo)=>{
         let timeCasa = jogo.casa.replace(' ','+')
         let timeFora = jogo.fora.replace(' ','+')
@@ -246,7 +261,7 @@ module.exports = class brasileiraoA {
         }
     
         if(jogoAnterior.casa == jogoAnterior.adversario){
-            const time = await BrasileiraoModels.getTimeByNome(jogoAnterior.fora)
+            const time = await BrasileiraoModels.getTimeByNome(urlCampeonato,jogoAnterior.fora)
             if(time == null){
                 res.status(404).json({message:'Team not found'})
                 return
@@ -271,17 +286,16 @@ module.exports = class brasileiraoA {
             time.jogosAnteriores = jogosAnteriores
             
             try {
-                await BrasileiraoModels.changingStatistics(jogoAnterior.fora, time)
+                await BrasileiraoModels.changingStatistics(urlCampeonato,jogoAnterior.fora, time)
             } catch (error) {
                 res.status(400).json({message:error})
                 return
             }
         }
-        console.log(jogoAnterior)
         jogoAnterior.adversario = timeFora
     
         if(jogoAnterior.casa != jogoAnterior.adversario){
-            const time= await BrasileiraoModels.getTimeByNome(jogoAnterior.casa)
+            const time= await BrasileiraoModels.getTimeByNome(urlCampeonato,jogoAnterior.casa)
             if(time == null){
                 res.status(404).json({message:'Team not found'})
                 return
@@ -307,7 +321,7 @@ module.exports = class brasileiraoA {
             time.jogosAnteriores = jogosAnteriores
             // adicionando array de jogos anteriores atulizados ao db
             try {
-                await BrasileiraoModels.changingStatistics(jogoAnterior.casa, time)
+                await BrasileiraoModels.changingStatistics(urlCampeonato,jogoAnterior.casa, time)
             } catch (error) {
                 res.status(400).json({message:error})
                 return
