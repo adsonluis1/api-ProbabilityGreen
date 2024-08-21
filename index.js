@@ -3,6 +3,7 @@ const brasileiraoARouter = require('./routes/brasileiraoRoutes')
 const premierLeagueRouter = require('./routes/premierLeague')
 const ligueOneRouter = require('./routes/ligueOne')
 const laLigaRouter = require('./routes/laLiga')
+const bundesLigaRouter = require('./routes/bundesliga')
 const cors = require('cors')
 const app = express()
 
@@ -13,6 +14,7 @@ app.use('/brasileiraoA', brasileiraoARouter)
 app.use('/premierLeague', premierLeagueRouter)
 app.use('/ligueOne', ligueOneRouter)
 app.use('/laLiga', laLigaRouter)
+app.use('/bundesliga', bundesLigaRouter)
 
 app.get('/', async (req,res)=>{
     res.json({message:'ola mundo'})
