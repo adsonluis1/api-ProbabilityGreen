@@ -215,9 +215,10 @@ module.exports = class controllers {
         proximosJogos.map(async (jogo)=>{
         let timeCasa = jogo.casa.replace(' ','+')
         let timeFora = jogo.fora.replace(' ','+')
+        let data = jogo.data.replace('/', '%2F')
         let golsCasa
         let golsFora
-        const searchUrl = `https://www.google.com/search?client=opera-gx&q=${timeCasa}+x+${timeFora}&sourceid=opera&ie=UTF-8&oe=UTF-8`
+        const searchUrl = `https://www.google.com/search?client=opera-gx&q=${timeCasa}+x+${timeFora}+${data}&sourceid=opera&ie=UTF-8&oe=UTF-8`
         const browser = await puppeteer.launch({headless:true,executablePath: chromium.path});
         const page = await browser.newPage();
         await page.goto(searchUrl);
