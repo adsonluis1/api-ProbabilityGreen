@@ -48,7 +48,7 @@ module.exports = class Models {
     }
 
     static async removeGamesProximosJogosCampeonato(urlCampeonato,horarioGame){
-        await client.db('probabilityGreen').collection(`proximosJogos${urlCampeonato}`).deleteMany({hora:horarioGame})
+        await client.db('probabilityGreen').collection(`proximosJogos${urlCampeonato}`).deleteOne({hora:horarioGame})
     }
 
     static async getTable(urlCampeonato){
